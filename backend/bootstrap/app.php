@@ -1,5 +1,10 @@
 <?php
 
+use App\Helpers\ApiResponse;
+use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Illuminate\Database\QueryException;
+
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -20,5 +25,50 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+
+        // ============================
+        // 422 - ValidationException
+        // ============================
+        $exceptions->render(function (ValidationException $e, $request) {
+            return ApiResponse::errors(
+                "Erro de validação",
+                $e->errors(),
+                422
+            );
+        });
+
+        // ============================
+        // 404 - NotFoundHttpException
+        // (isso captura findOrFail no Laravel 12)
+        // ============================
+        $exceptions->render(function (NotFoundHttpException $e, $request) {
+            return ApiResponse::errors(
+                "Recurso não encontrado",
+                null,
+                404
+            );
+        });
+
+        // ============================
+        // 500 - QueryException (erros SQL)
+        // ============================
+        $exceptions->render(function (QueryException $e, $request) {
+            return ApiResponse::errors(
+                "Erro ao acessar o banco de dados",
+                $e->getMessage(),
+                500
+            );
+        });
+
+        // ============================
+        // 500 - Exception Genérica
+        // (último fallback)
+        // ============================
+        $exceptions->render(function (\Exception $e, $request) {
+            return ApiResponse::errors(
+                "Erro interno no servidor",
+                $e->getMessage(),
+                500
+            );
+        });
     })->create();
