@@ -4,6 +4,8 @@ use App\Helpers\ApiResponse;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Illuminate\Database\QueryException;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
+
 
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -26,9 +28,8 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions): void {
 
-        // ============================
-        // 422 - ValidationException
-        // ============================
+        #########################################################
+        #### 422 - ValidationException ####
         $exceptions->render(function (ValidationException $e, $request) {
             return ApiResponse::errors(
                 "Erro de validação",
@@ -37,10 +38,9 @@ return Application::configure(basePath: dirname(__DIR__))
             );
         });
 
-        // ============================
-        // 404 - NotFoundHttpException
+        #########################################################
+        #### 404 - NotFoundHttpException ####
         // (isso captura findOrFail no Laravel 12)
-        // ============================
         $exceptions->render(function (NotFoundHttpException $e, $request) {
             return ApiResponse::errors(
                 "Recurso não encontrado",
@@ -49,9 +49,19 @@ return Application::configure(basePath: dirname(__DIR__))
             );
         });
 
-        // ============================
-        // 500 - QueryException (erros SQL)
-        // ============================
+        #########################################################
+        #### Exceções HTTP genéricas (401, 403, 405, etc.) ####
+        $exceptions->render(function (HttpExceptionInterface $e, $request) {
+            return ApiResponse::errors(
+                $e->getMessage() ?: 'Erro HTTP',
+                null,
+                $e->getStatusCode()
+            );
+        });
+
+
+        #########################################################
+        #### 500 - QueryException (erros SQL) ####
         $exceptions->render(function (QueryException $e, $request) {
             return ApiResponse::errors(
                 "Erro ao acessar o banco de dados",
@@ -60,10 +70,9 @@ return Application::configure(basePath: dirname(__DIR__))
             );
         });
 
-        // ============================
-        // 500 - Exception Genérica
+        #########################################################
+        #### 500 - Exception Genérica ####
         // (último fallback)
-        // ============================
         $exceptions->render(function (\Exception $e, $request) {
             return ApiResponse::errors(
                 "Erro interno no servidor",

@@ -38,9 +38,11 @@ class AuthController extends Controller
         $user = $this->authService->validateLogin($request->validated());        
 
         if (!$user) {
-            return response()->json([
-                'message' => 'Credenciais inválidas.'
-            ], 401);
+            // return response()->json([
+            //     'message' => 'Credenciais inválidas.'
+            // ], 401);
+            abort(401, 'Credenciais inválidas.');
+
         }
         
         $token = $user->createToken('api_token',['auth'])->plainTextToken;        
@@ -63,8 +65,9 @@ class AuthController extends Controller
     // }
     public function logout(Request $request)
     {
+        # Token vai no header, no campo Authorization: Bearer {TOKEN}.
+        # $request->user() já é automaticamente preenchido com o usuário autenticado pelo middleware auth:sanctum.
         $request->user()->tokens()->delete();
-
         return response()->json([
             'message' => 'Logout realizado.'
         ]);
