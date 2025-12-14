@@ -22,7 +22,7 @@ class AuthController extends Controller
         //     "password_confirmation": "12345678"
         // }    
         $user  = $this->authService->register($request->validated());
-        $token = $user->createToken('api_token')->plainTextToken;        
+        $token = $user->createToken('api_token',['auth'])->plainTextToken;        
 
         return response()->json([
             'message' => 'Usuário registrado com sucesso.',
@@ -43,7 +43,7 @@ class AuthController extends Controller
             ], 401);
         }
         
-        $token = $user->createToken('api_token')->plainTextToken;        
+        $token = $user->createToken('api_token',['auth'])->plainTextToken;        
 
         return response()->json([
             'message' => 'Login realizado com sucesso.',
